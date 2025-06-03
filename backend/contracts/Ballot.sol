@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 contract Ballot {
-    struct Person {
-        bool voted; // if the person as already voted
+    struct Voter {
+        bool hasVoted; // if the person as already voted
         uint vote; // index of the vote
     }
 
@@ -14,14 +14,30 @@ contract Ballot {
 
     address public chairman; // contract owner
 
-    mapping(address => Person) public voters; // all voters address
+    bool private isOpen = false; // define if the ballot is currently open
+
+    mapping(address => Voter) public voters; // all voters address
 
     Proposal[] public proposals; // all proposals
+
+    modifier chairmanOnly() {
+        require(msg.sender == chairman, "Only the chairman can execute this action");
+        _;
+    }
+
+    modifier ballotIsOpen() {
+        require(isOpen == true, "The ballot is not currently open");
+        _;
+    }
+
+    modifier canVote(address voter) {
+        require(!voters[voter].hasVoted, "The voter has already voted.");
+        _;
+    }
 
     // Create a new ballot to choose one of the proposals
     constructor(bytes32[] memory proposalNames) {
         chairman = msg.sender;
-        voters[chairman];
 
         // For each proposal names, create a new Proposal Object and push it to the array
         // of available proposals
@@ -33,19 +49,20 @@ contract Ballot {
         }
     }
 
+    function toggleOpen() public chairmanOnly {
+        isOpen = !isOpen;
+    }
+
     // Give to the voter the right to vote on this ballot by the chairman
-    function addNewVoter(address voter) public {
-        require(msg.sender == chairman, "Only the chairman can give the right to vote.");
-        require(!voters[voter].voted, "The voter has already voted.");
-        voters[voter].voted = false;
+    function giveRightToVote(address voter) public chairmanOnly ballotIsOpen canVote(voter) {
+        voters[voter].hasVoted = false;
     }
  
     // Add a vote to a proposal
-    function vote(uint proposal) public {
-        Person storage sender = voters[msg.sender];
-        require(!sender.voted, "Already voted!");
-        sender.voted = true;
-        sender.vote = proposal;
+    function vote(uint proposal) public ballotIsOpen canVote(msg.sender) {
+        Voter storage voter = voters[msg.sender];
+        voter.hasVoted = true;
+        voter.vote = proposal;
         proposals[proposal].count++;
     }
 
