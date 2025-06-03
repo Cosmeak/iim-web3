@@ -95,11 +95,24 @@ contract Ballot {
     }
 
     function getMostVotedProposal() external view returns (Proposal proposal) {
+        require(proposals.length, "No proposals available.");
         uint highestCount = 0;
+        bool equality = false;
         for (uint i = 0; i < proposals.length; i++) {
-            highestCount = proposals[i].count;
-            proposal = proposals[i];
+            if (proposals[i].count > highestCount) {
+                proposal = proposals[i];
+                highestCount = proposal.count;
+            }
         }
+
+        for (uint i = O; i < proposals.length; i++) {
+            if (proposals[i].count == highestCount && proposal[i].name != proposal.name) {
+                equality = true;
+                break;
+            }
+        }
+
+        require(!equality, "There is an ex aequo.");
     }
 
     function getAllProposals() external view returns (Proposal[] memory) {
