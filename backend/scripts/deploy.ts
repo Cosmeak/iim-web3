@@ -1,22 +1,30 @@
 import { ethers } from "hardhat";
+import * as dotenv from "dotenv";
+
+dotenv.config(); // Charge .env si tu déploies sur Sepolia
 
 async function main() {
   const proposals = ["Alice", "Bob", "Charlie"];
-  const bytes32Proposals = proposals.map((name) =>
-      ethers.encodeBytes32String(name)
+  const maxVoters = 5;
+
+  console.log("Deploiement du contrat Voting...");
+
+  const Voting = await ethers.getContractFactory("Voting");
+  const voting = await Voting.deploy(
+      proposals.map(name => ethers.encodeBytes32String(name)),
+      maxVoters
   );
 
-  const Ballot = await ethers.getContractFactory("Ballot");
-  const ballot = await Ballot.deploy(bytes32Proposals);
+  await voting.waitForDeployment();
 
-  await ballot.waitForDeployment();
-  const [owner] = await ethers.getSigners();
+  console.log("✅ Contrat deployé a :", await voting.getAddress());
 
-  console.log("Deploying contract with address:", owner.address);
-  console.log(`Contract deployed at: ${await ballot.getAddress()}`);
+  // Vérification initiale (optionnel)
+  const prop0 = await voting.getProposal(0);
+  console.log("🎯 Premiere proposition :", ethers.decodeBytes32String(prop0.name));
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch((error) => {
+  console.error(error);
   process.exitCode = 1;
 });
