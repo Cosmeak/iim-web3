@@ -17,7 +17,8 @@ contract Ballot {
 
     bool private isOpen = false; // define if the ballot is currently open
 
-    uint private nbMaxVoters; // define the maximum voter possible
+    uint private nbMaxVoter; // define the maximum voter possible
+    uint private nbVoters = 0; // define the current number of voters
 
     mapping(address => Voter) public voters; // all voters address
 
@@ -39,12 +40,12 @@ contract Ballot {
     }
 
     modifier ballotIsMaxed() {
-        require(voters.length > maxVoter, "Maximum number of voters is reached.");
+        require(nbVoters > nbMaxVoter, "Maximum number of voters is reached.");
         _;
     }
 
     // Create a new ballot to choose one of the proposals
-    constructor(bytes32[] memory proposalNames, uint memory nbMaxVoter_) {
+    constructor(bytes32[] memory proposalNames, uint nbMaxVoter_) {
         chairman = msg.sender;
 
         nbMaxVoter = nbMaxVoter_;       
@@ -72,8 +73,9 @@ contract Ballot {
         ballotIsMaxed
     {    
         voters[voter].hasVoted = false;
+        nbVoters++;
 
-        if (voters.length == nbMaxVoter) {
+        if (nbVoters == nbMaxVoter) {
             toggleOpen();
         }
     }
@@ -94,8 +96,8 @@ contract Ballot {
         return voters[msg.sender].exists;
     }
 
-    function getMostVotedProposal() external view returns (Proposal proposal) {
-        require(proposals.length, "No proposals available.");
+    function getMostVotedProposal() external view returns (Proposal memory proposal) {
+        require(proposals.length > 0, "No proposals available.");
         uint highestCount = 0;
         bool equality = false;
         for (uint i = 0; i < proposals.length; i++) {
@@ -105,8 +107,8 @@ contract Ballot {
             }
         }
 
-        for (uint i = O; i < proposals.length; i++) {
-            if (proposals[i].count == highestCount && proposal[i].name != proposal.name) {
+        for (uint i = 0; i < proposals.length; i++) {
+            if (proposals[i].count == highestCount && proposals[i].name != proposal.name) {
                 equality = true;
                 break;
             }

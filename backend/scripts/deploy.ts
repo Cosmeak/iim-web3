@@ -7,7 +7,7 @@ async function main() {
   );
 
   const Ballot = await ethers.getContractFactory("Ballot");
-  const ballot = await Ballot.deploy(bytes32Proposals);
+  const ballot = await Ballot.deploy(bytes32Proposals, 50);
 
   await ballot.waitForDeployment();
   const [owner] = await ethers.getSigners();
