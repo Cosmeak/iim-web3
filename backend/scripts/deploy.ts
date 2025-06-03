@@ -1,15 +1,19 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const Contract = await ethers.getContractFactory("Ballot");
-  const contractInstance = await Contract.deploy();
+  const proposals = ["Alice", "Bob", "Charlie"];
+  const bytes32Proposals = proposals.map((name) =>
+      ethers.encodeBytes32String(name)
+  );
 
-  await contractInstance.waitForDeployment();
+  const Ballot = await ethers.getContractFactory("Ballot");
+  const ballot = await Ballot.deploy(bytes32Proposals);
+
+  await ballot.waitForDeployment();
   const [owner] = await ethers.getSigners();
-  console.log("Deploying contract with address:", owner.address);
 
-  const contractAddress = await contractInstane.getAddress();
-  console.log(`Contract deployed at: ${contractAddress}`);
+  console.log("Deploying contract with address:", owner.address);
+  console.log(`Contract deployed at: ${await ballot.getAddress()}`);
 }
 
 main().catch((err) => {
