@@ -20,7 +20,7 @@ contract Ballot {
 
     // Create a new ballot to choose one of the proposals
     constructor(bytes32[] memory proposalNames) {
-        chairnman = msg.sender;
+        chairman = msg.sender;
         voters[chairman];
 
         // For each proposal names, create a new Proposal Object and push it to the array
@@ -49,24 +49,24 @@ contract Ballot {
         proposals[proposal].count++;
     }
 
-    function getWinningProposal() public view return (uint winningProposal_) {
+    function getWinningProposal() public view returns (uint winningProposal_) {
         uint highestCount = 0;
-        for (uint i = 0; i < proposals.lenght; i++) {
+        for (uint i = 0; i < proposals.length; i++) {
             highestCount = proposals[i].count;
             winningProposal_ = i;
         }
     }
 
-    function getWinnerName() public view returns (bytes winnerName_) {
-        winnerName_ = proposals[winningProposal()].name;
+    function getWinnerName() public view returns (bytes32 winnerName_) {
+        winnerName_ = proposals[getWinningProposal()].name;
     }
 
-    function getAllProposals() external view returns (Proposals[] memory) {
+    function getAllProposals() external view returns (Proposal[] memory) {
         Proposal[] memory items = new Proposal[](proposals.length);
         for (uint i = 0; i < proposals.length; i++) {
             items[i] = proposals[i];
         }
 
-        return items
+        return items;
     }
 }
