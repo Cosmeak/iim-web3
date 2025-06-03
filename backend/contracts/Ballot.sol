@@ -5,6 +5,7 @@ contract Ballot {
     struct Voter {
         bool hasVoted; // if the person as already voted
         uint vote; // index of the vote
+        bool exists; // used to check if a voter exists in the map
     }
 
     struct Proposal {
@@ -15,6 +16,8 @@ contract Ballot {
     address public chairman; // contract owner
 
     bool private isOpen = false; // define if the ballot is currently open
+
+    uint private nbMaxVoters; // define the maximum voter possible
 
     mapping(address => Voter) public voters; // all voters address
 
@@ -35,9 +38,16 @@ contract Ballot {
         _;
     }
 
+    modifier ballotIsMaxed() {
+        require(voters.length > maxVoter, "Maximum number of voters is reached.");
+        _;
+    }
+
     // Create a new ballot to choose one of the proposals
-    constructor(bytes32[] memory proposalNames) {
+    constructor(bytes32[] memory proposalNames, uint memory nbMaxVoter_) {
         chairman = msg.sender;
+
+        nbMaxVoter = nbMaxVoter_;       
 
         // For each proposal names, create a new Proposal Object and push it to the array
         // of available proposals
@@ -54,8 +64,18 @@ contract Ballot {
     }
 
     // Give to the voter the right to vote on this ballot by the chairman
-    function giveRightToVote(address voter) public chairmanOnly ballotIsOpen canVote(voter) {
+    function giveRightToVote(address voter)
+        public
+        chairmanOnly
+        ballotIsOpen
+        canVote(voter)
+        ballotIsMaxed
+    {    
         voters[voter].hasVoted = false;
+
+        if (voters.length == nbMaxVoter) {
+            toggleOpen();
+        }
     }
  
     // Add a vote to a proposal
@@ -66,16 +86,20 @@ contract Ballot {
         proposals[proposal].count++;
     }
 
-    function getWinningProposal() public view returns (uint winningProposal_) {
+    function checkVoted() external view returns (bool) {
+        return voters[msg.sender].hasVoted;
+    }
+
+    function checkRegistered() external view returns (bool) {
+        return voters[msg.sender].exists;
+    }
+
+    function getMostVotedProposal() external view returns (Proposal proposal) {
         uint highestCount = 0;
         for (uint i = 0; i < proposals.length; i++) {
             highestCount = proposals[i].count;
-            winningProposal_ = i;
+            proposal = proposals[i];
         }
-    }
-
-    function getWinnerName() public view returns (bytes32 winnerName_) {
-        winnerName_ = proposals[getWinningProposal()].name;
     }
 
     function getAllProposals() external view returns (Proposal[] memory) {
