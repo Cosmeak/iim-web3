@@ -2,7 +2,7 @@
     import {onMount} from 'svelte';
     import {ethers} from 'ethers';
     import {fade, scale} from 'svelte/transition';
-    import contractABI from '../abis/ballot.json';
+    import contractABI from '../abis/Ballot.json';
 
     const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 
