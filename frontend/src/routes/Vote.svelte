@@ -1,7 +1,14 @@
 <script>
-    import { fly, scale, fade } from 'svelte/transition';
-    import { tick } from 'svelte';
-    import { navigate } from '../router';
+    import {fly, scale, fade} from 'svelte/transition';
+    import {tick} from 'svelte';
+    import {navigate} from '../router';
+    import {ethers} from 'ethers';
+
+
+
+    const contractAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'
+    import contractABI from '../abis/ballot.json';
+
 
     const choices = [
         { id: 'soso', label: 'Soso' },
@@ -18,15 +25,35 @@
     async function submitVote() {
         if (!selected || hasVoted) return;
 
-        hasVoted = true;
-        await tick();
+        try {
+            // 1. Demander la connexion à Metamask
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
 
-        // Simuler une transition vers les résultats
-        setTimeout(() => {
-            navigate('/results');
-        }, 1200);
+            // 2. Connecter le contrat
+            const contract = new ethers.Contract(contractAddress, contractABI.abi, signer);
+
+            // 3. Trouver l'index de l'option choisie
+            const index = choices.findIndex(c => c.id === selected);
+
+            // 4. Appeler la fonction vote
+            const tx = await contract.vote(index);
+            await tx.wait(); // attendre la confirmation
+
+            hasVoted = true;
+            await tick();
+
+            setTimeout(() => {
+                navigate('/results');
+            }, 1200);
+
+        } catch (error) {
+            console.error('Erreur lors du vote :', error);
+            alert('Une erreur est survenue pendant le vote.');
+        }
     }
 </script>
+
 
 <main class="min-h-screen pt-20 px-6 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col items-center pt-16">
     <h1 class="text-3xl md:text-5xl font-bold mb-8" in:fly={{ y: -30 }}>
